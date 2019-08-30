@@ -8,6 +8,7 @@ class Common:
     def __init__(self, settings, session):
         self.settings = settings
         self.session = session
+        self.KEYBASE_PROOF_TWEET_EXCERPT = "Verifying myself: I am"
 
         self.logger = logging.getLogger("semiphemeral-log")
         self.logger.setLevel(logging.INFO)
@@ -53,7 +54,8 @@ class Common:
         so it's important to manually exclude those before deleting
         """
         self.settings.load()
-        datetime_threshold = datetime.datetime.utcnow() - datetime.timedelta(days=self.settings.get('tweets_days_threshold'))
+        datetime_threshold = datetime.datetime.utcnow(
+        ) - datetime.timedelta(days=self.settings.get('tweets_days_threshold'))
 
         # Select tweets from threads to exclude
         tweets_to_exclude = []
@@ -73,7 +75,8 @@ class Common:
             .filter(Tweet.is_retweet == 0) \
             .filter(Tweet.created_at < datetime_threshold) \
             .filter(Tweet.retweet_count < self.settings.get('tweets_retweet_threshold')) \
-            .filter(Tweet.favorite_count < self.settings.get('tweets_like_threshold'))
+            .filter(Tweet.favorite_count < self.settings.get('tweets_like_threshold')) \
+            .filter(~Tweet.text.contains(self.KEYBASE_PROOF_TWEET_EXCERPT))
 
         # Should we also filter out exclude_from_delete?
         if not include_excluded:
